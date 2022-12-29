@@ -1,6 +1,9 @@
 from asyncua import Client
-from asyncio import get_event_loop
+from asyncio import get_event_loop, sleep
 from config import Config
+from factory import Factory
+from device import Device
+from agent import Agent
 
 async def main():
   config = Config()
@@ -8,13 +11,19 @@ async def main():
   url = config.getUrl
 
   async with Client(url=url) as client:
-    devices = await client.get_objects_node().get_children()
+    factory = Factory(client)
+    await factory.create(client)
 
-    for device in devices:
-      name = (await device.read_browse_name()).Name
+    agentList = []
 
-      if (name != 'Server'):
-        connection_string = config.get_device_connection_string('devices', name)
+    for device in factory.devices:
+      agent = Agent(device, config.get_device_connection_string('devices', device.name))
+      agentList.append(agent)
+
+    while True:
+      for agent in agentList:
+        await agent.telemetry()
+      await sleep(5)
 
 if __name__ == "__main__":
     loop = get_event_loop()
