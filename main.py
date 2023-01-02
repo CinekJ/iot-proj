@@ -24,7 +24,7 @@ async def main():
       tasks = []
       for agent in agentList:
         agentTasks = await agent.createTasks()
-        for task in tasks:
+        for task in agentTasks:
           tasks.append(task)
         await gather(*tasks)
       await sleep(5)
